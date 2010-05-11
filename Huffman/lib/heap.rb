@@ -1,6 +1,7 @@
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
 require 'tree.rb'
+
 class Heap
 	attr_accessor :heap
 	def initialize
@@ -68,9 +69,9 @@ class Heap
 		else
 			min = @heap.first
 			self.swap(0,self.last(@heap),@heap)
-			@heap.delete_at(self.last(@heap)) 
+			@heap.delete_at(self.last(@heap))
 			@heap=self.heapify(0,@heap)	unless @heap.size<=1
-			return min
+		return min
 		end
   end
   

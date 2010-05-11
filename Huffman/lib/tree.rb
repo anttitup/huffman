@@ -12,9 +12,18 @@ module Tree
       
       def minus(tree)
 				@freq -tree.freq
-      end 
-    end
+      end
 
+			def walk_tree(number)
+				if self.is_a? Tree::Leaf
+					yield node
+				elsif number==0
+					return self.get_left
+				else
+					return self.get_right
+				end
+			end
+		end
     class Node < Tree
       attr_accessor :left,:right
 			def initialize *args

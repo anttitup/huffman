@@ -5,140 +5,130 @@ require 'heap.rb'
 require 'bit.rb'
 class Main
 
-  attr_reader :data_array,:file_name,:heap,:tree,:array_size
-	attr_accessor :heap_size
+  attr_reader :merkkien_maara,:tiedoston_nimi,:keko,:keon_koko
 
-  def initialize file_name
-    @data_array = Array.new 256,0
-    @file_name = file_name
-    @heap = Heap.new
-		@heap_size=0
+  def initialize tiedoston_nimi
+    @merkkien_maara = Array.new 256,0
+    @tiedoston_nimi = tiedoston_nimi
+    @keko = Heap.new
 		@eof=255
-		$table=0
+		@keon_koko
   end
 
 
-  def read_file! 
-		help_array= Array.new(256,0)
-		File.open(@file_name,'r')do|file|
-			file.each_byte { |byte|help_array[byte]+=1 }
-			help_array[@eof]+=1 #eof
-			@data_array=help_array
+  def lue_tiedosto
+		apu= Array.new(256,0)
+		File.open(@tiedoston_nimi,'r')do|tiedosto|
+			tiedosto.each_byte { |tavu|apu[tavu]+=1 }
+			apu[@eof]+=1 #eof
+			@merkkien_maara=apu
     end
   end
     
-  def make_tree()
-		heap=Heap.new
-		@data_array.each_with_index do |item,index|
-			heap.push!(Tree::Leaf.new(index,item)) unless item==0
+  def tee_puu(merkkien_maara)
+		help=Heap.new
+		merkkien_maara.each_with_index do |merkki,indeksi|
+			help.push!(Tree::Leaf.new(indeksi,merkki)) unless merkki==0
 		end
-		@heap_size	=heap.size
-		heap
+		@keon_koko=help.size
+		help
   end
     
-  def merge_tree(heap)
-		if heap.size==1
-			return heap.pop
+  def yhdista_puut(keko)
+		if keko.size==1
+			return keko.pop
 		else
-			while heap.size > 1
-				a = heap.pop
-				b = heap.pop
-				heap.push! Tree::Node.new(a,b)
+			while keko.size > 1
+				a = keko.pop
+				b = keko.pop
+				keko.push! Tree::Node.new(a,b)
 			end
-				return heap.pop
+				return keko.pop
 			end
-		end
-#muista tehdä table main ohjelmaan
-		def make_table_helper tree, prefix, table
-			if tree.is_a? Tree::Leaf
-				table[tree.charechter] =prefix
-			else
-				make_table_helper tree.get_left, prefix + "0", table
-				make_table_helper tree.get_right, prefix + "1", table
-			end
-			table
 		end
 
-		def write_encoding  table,tree
-			encode_file_name=@file_name+".encd"
-			encoded_file=File.new(encode_file_name, "w+")
-			File.open(encode_file_name,"w")do|file|
+		def tee_koodit puu, prefix, taulu
+			if puu.is_a? Tree::Leaf
+				taulu[puu.charechter] =prefix
+			else
+				tee_koodit puu.get_left, prefix + "0", taulu
+				tee_koodit puu.get_right, prefix + "1", taulu
+			end
+			taulu
+		end
+
+		def write_encoding  taulu,tree
+			enkoodatun_tiedoston_nimi=@tiedoston_nimi+".encd"
+			encoded_file=File.new(enkoodatun_tiedoston_nimi, "w+")
+			File.open(enkoodatun_tiedoston_nimi,"w")do|kirjoitettava_tiedosto|
 				#tallennetaan taulukon koko
-				file.puts @heap_size
-				self.encode_node(file,self.data_array)
-				File.open(@file_name,"r")  do |a_file|
-					bit=Bit.new(a_file)
-					until a_file.eof?
-						byte=a_file.getc
-						char=table[byte]
-						bit.write_char(char, file,false)
+				puts @keon_koko
+				kirjoitettava_tiedosto.puts @keon_koko
+				self.merkkien_taajuus(kirjoitettava_tiedosto,self.merkkien_maara)
+				File.open(@tiedoston_nimi,"r")  do |luettava_tiedsto|
+					bitti=Bit.new(luettava_tiedsto)
+					until luettava_tiedsto.eof?
+						byte=luettava_tiedsto.getc
+						char=taulu[byte]
+						bitti.write_char(char, kirjoitettava_tiedosto,false)
 					end
-						bit.write_char(table[@eof],file,true)
+						bitti.write_char(taulu[@eof],kirjoitettava_tiedosto,true)
 				end
 			end
-			encode_file_name
+			enkoodatun_tiedoston_nimi
 		end
 		
-		def encode_node(file,data_array)
-			data_array.each_with_index { |item,index|
-				file.puts("#{index} #{item}") unless item==0
+		def merkkien_taajuus(tiedsto,merkkien_maara)
+			merkkien_maara.each_with_index { |merkki,indeksi|
+				tiedsto.puts("#{indeksi} #{merkki}") unless merkki==0
 			}
 		end
 
 	
-	def decode_tree file_name
-		file_n=file_name.chomp(".encd")
-		File.new(file_n,"w")
-		File.open(file_name,"r") do |file|
-			tree=self.make_decode_tree(file)
-			File.open(file_n,"w")do|write_this_file|
-				self.write_undecoded_file(write_this_file,file,tree)
+	def pura_puu purettava_tiedosto
+		puretun_tiedoston_nimi=purettava_tiedosto.chomp(".encd")
+		File.new(puretun_tiedoston_nimi,"w")
+		File.open(purettava_tiedosto,"r") do |tiedosto|
+			puu=self.tee_dekoodaus_puu(tiedosto)
+			File.open(puretun_tiedoston_nimi,"w")do|kirjoita_tahan_tiedostoon|
+				self.kirjoita_dekoodattu_tiedosto(kirjoita_tahan_tiedostoon,tiedosto,puu)
 			end
 		end
 	end
 
-	def make_decode_tree file
+	def tee_dekoodaus_puu tiedosto
 		freqs=Array.new 256,0
-		line=[]
-		@array_size=file.gets.to_i
-		@array_size.times do
-			line<<file.gets
+		rivi=[]
+		taulukon_koko=tiedosto.gets.to_i
+		puts taulukon_koko
+		taulukon_koko.times do
+			rivi<<tiedosto.gets
 		end
-		for item in line
-			item=item.split(" ")
-			index=item.shift.to_i
-			freqs[index]=item.shift.to_i
+		for merkki in rivi
+			merkki=merkki.split(" ")
+			index=merkki.shift.to_i
+			freqs[index]=merkki.shift.to_i
 		end
-		@data_array=freqs
-		heap=self.make_tree
-		$table=self.merge_tree(heap)
-		$table
+		heap=tee_puu(freqs)
+		puu=yhdista_puut(heap)
+		puts puu
+		puu
 	end
 
-	def write_undecoded_file write_this_file,file,tree
-			bit=Bit.new(tree)
-			$byte=[]
-			node=tree
-			until file.eof?
-				node=tree
-				until node.instance_of?(Tree::Leaf)	
-					bits=file.getc
-					node,bits=bit.read_bit(bits,node)
-					puts(bits)
-					until bits.empty?
-							if node.instance_of?(Tree::Leaf)
-								puts(node.charechter)
-								write_this_file.putc(node.charechter) if node.instance_of?(Tree::Leaf)
-								node=tree
-							end
-							node,bits=bit.which_char(bits, node)
-							puts(bits)
+	def kirjoita_dekoodattu_tiedosto kirjoita_tahan_tiedostoon,kirjoita_tasta_tiedostosta,puu
+			bit=Bit.new(puu)
+			until kirjoita_tasta_tiedostosta.eof?
+				node=puu
+				bits=bit.read_bits(kirjoita_tasta_tiedostosta)
+				until node.instance_of?(Tree::Leaf) and bits.empty?
+					if node.instance_of?(Tree::Leaf)
+							kirjoita_tahan_tiedostoon.putc(node.charechter)
+							node=puu
 					end
-						return if node.charechter==@eof
-						write_this_file.putc(node.charechter) if node.instance_of?(Tree::Leaf)
-						bits=0
-				end
-			
+					node,bits=bit.which_char(bits,node)
+					return if node.instance_of?(Tree::Leaf) and node.charechter==@eof
+					end
+					kirjoita_tahan_tiedostoon.putc(node.charechter) if node.instance_of?(Tree::Leaf)
 			end
 	end
 end
@@ -149,10 +139,10 @@ def test_script
 		actual_string.each_char {|cstr|file.putc(cstr)  }
 	end
 	$m=Main.new(actual_string)
-	$m.read_file!
-	heap=$m.make_tree
-	$a=$m.merge_tree(heap)
-	$u=$m.make_table_helper($a, "", Array.new($m.heap_size))
+	$m.lue_tiedosto
+	heap=$m.tee_puu($m.merkkien_maara)
+	$a=$m.yhdista_puut(heap)
+	$u=$m.tee_koodit($a, "", Array.new($m.keko.size))
 	s=$m.write_encoding($u,$a)
-	t=$m.decode_tree(s)
+	t=$m.pura_puu(s)
 end

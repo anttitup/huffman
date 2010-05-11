@@ -19,19 +19,7 @@ class Bit
 	end
 
 	def read_bits(file)
-		bit=file.getc
-		bit=dec2bin(bit)
-		bit.split(//)until bit.size==8
-		bit
-	end
-
-	def read_bit(bits,tree)
-		bits=dec2bin(bits)
-		bits=bits.split(//)unless bits==0
-		bits=bits.to_a if bits==0
-		bits.unshift("0")until bits.size==8
-		node,bits=which_char(bits,tree)
-		return node,bits
+		dec2bin(file.getc).split(//)
 	end
 
 	def write_char char,file,eof
