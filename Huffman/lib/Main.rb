@@ -62,14 +62,14 @@ class Main
 			encoded_file=File.new(enkoodatun_tiedoston_nimi, "w+")
 			File.open(enkoodatun_tiedoston_nimi,"w")do|kirjoitettava_tiedosto|
 				#tallennetaan taulukon koko
-				puts @keon_koko
 				kirjoitettava_tiedosto.puts @keon_koko
 				self.merkkien_taajuus(kirjoitettava_tiedosto,self.merkkien_maara)
 				File.open(@tiedoston_nimi,"r")  do |luettava_tiedsto|
-					bitti=Bit.new(luettava_tiedsto)
+					bitti=Bit.new(tree,luettava_tiedsto)
 					until luettava_tiedsto.eof?
 						byte=luettava_tiedsto.getc
 						char=taulu[byte]
+						puts char
 						bitti.write_char(char, kirjoitettava_tiedosto,false)
 					end
 						bitti.write_char(taulu[@eof],kirjoitettava_tiedosto,true)
@@ -100,7 +100,6 @@ class Main
 		freqs=Array.new 256,0
 		rivi=[]
 		taulukon_koko=tiedosto.gets.to_i
-		puts taulukon_koko
 		taulukon_koko.times do
 			rivi<<tiedosto.gets
 		end
@@ -111,24 +110,30 @@ class Main
 		end
 		heap=tee_puu(freqs)
 		puu=yhdista_puut(heap)
-		puts puu
 		puu
 	end
 
 	def kirjoita_dekoodattu_tiedosto kirjoita_tahan_tiedostoon,kirjoita_tasta_tiedostosta,puu
-			bit=Bit.new(puu)
+		bit=Bit.new(puu,kirjoita_tasta_tiedostosta)
+			bits=[]
+			$puu = puu
 			until kirjoita_tasta_tiedostosta.eof?
 				node=puu
-				bits=bit.read_bits(kirjoita_tasta_tiedostosta)
-				until node.instance_of?(Tree::Leaf) and bits.empty?
-					if node.instance_of?(Tree::Leaf)
-							kirjoita_tahan_tiedostoon.putc(node.charechter)
-							node=puu
+				until node.instance_of?(Tree::Leaf)
+					bits=bit.read_bits(kirjoita_tasta_tiedostosta) if bits.empty?
+					bitti=bits.shift
+					if bitti=='0'
+						node=node.get_left
+					elsif bitti == '1'
+						node=node.get_right
 					end
-					node,bits=bit.which_char(bits,node)
-					return if node.instance_of?(Tree::Leaf) and node.charechter==@eof
-					end
-					kirjoita_tahan_tiedostoon.putc(node.charechter) if node.instance_of?(Tree::Leaf)
+				end
+				puts node.charechter
+				if !(node.charechter==@eof)
+					kirjoita_tahan_tiedostoon.putc(node.charechter)
+				else
+					return
+				end
 			end
 	end
 end

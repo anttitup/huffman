@@ -3,7 +3,7 @@
 require 'Main.rb'
 require 'tree.rb'
 class Bit
-	def initialize tree
+	def initialize tree,kirjoita_tahan_tiedostoon
 		@bits=Array.new
 		@tree =tree
 	end
@@ -18,8 +18,8 @@ class Bit
 		end
 	end
 
-	def read_bits(file)
-		dec2bin(file.getc).split(//)
+	def read_bits(lue_tasta_tiedostosta)
+		dec2bin(lue_tasta_tiedostosta.getc).split(//)
 	end
 
 	def write_char char,file,eof
@@ -37,21 +37,6 @@ class Bit
 				self.write_bit(file, bit)
 			end
 			self.write_bit(file,"0")	until @bits.empty?
-		end
-	end
-
-	def which_char(bit,tree)
-		node=tree
-		bits=bit
-		bitti=bits.shift
-		if	node.instance_of?(Tree::Leaf)
-			return node,bits
-		elsif bitti.nil?
-			return node
-		elsif bitti == '1'
-			return which_char(bits,node.get_right)
-		else
-			return which_char(bits,node.get_left)
 		end
 	end
 
