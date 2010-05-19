@@ -6,23 +6,35 @@ class Bit
 	def initialize tree,kirjoita_tahan_tiedostoon
 		@bits=Array.new
 		@tree =tree
+		@puskuri =Array.new
 	end
 	
 	def write_bit(file,byte)
 		if @bits.size<=7
 			@bits.push byte
 		else
+			puts "kirjoittaa nama"
+			puts @bits
 			bit=bin2dec(@bits.to_s)
 			file.putc(bit)
 			@bits.clear
+			@bits.push byte
 		end
 	end
 
 	def read_bits(lue_tasta_tiedostosta)
-		dec2bin(lue_tasta_tiedostosta.getc).split(//)
+		bits = dec2bin(lue_tasta_tiedostosta.getc).split(//)
+		while bits.size<8
+			bits.unshift("0")
+		end
+		puts "lukee nama"
+		puts bits
+		bits
 	end
 
 	def write_char char,file,eof
+		puts "saa nama"
+		puts char
 		unless eof
 			bits=char.split(//)
 			until bits.empty?
@@ -36,7 +48,11 @@ class Bit
 				bit=bits.shift
 				self.write_bit(file, bit)
 			end
-			self.write_bit(file,"0")	until @bits.empty?
+			@bits.push('0') while @bits.size<=7
+			puts "loppu"
+			puts @bits
+			bit=bin2dec(@bits.to_s)
+			file.putc(bit)
 		end
 	end
 

@@ -69,7 +69,6 @@ class Main
 					until luettava_tiedsto.eof?
 						byte=luettava_tiedsto.getc
 						char=taulu[byte]
-						puts char
 						bitti.write_char(char, kirjoitettava_tiedosto,false)
 					end
 						bitti.write_char(taulu[@eof],kirjoitettava_tiedosto,true)
@@ -117,7 +116,7 @@ class Main
 		bit=Bit.new(puu,kirjoita_tasta_tiedostosta)
 			bits=[]
 			$puu = puu
-			until kirjoita_tasta_tiedostosta.eof?
+			until kirjoita_tasta_tiedostosta.eof? and bits.empty?
 				node=puu
 				until node.instance_of?(Tree::Leaf)
 					bits=bit.read_bits(kirjoita_tasta_tiedostosta) if bits.empty?
@@ -127,9 +126,10 @@ class Main
 					elsif bitti == '1'
 						node=node.get_right
 					end
+					puts node
 				end
-				puts node.charechter
 				if !(node.charechter==@eof)
+					puts node.charechter
 					kirjoita_tahan_tiedostoon.putc(node.charechter)
 				else
 					return
@@ -138,7 +138,7 @@ class Main
 	end
 end
 def test_script
-	actual_string = "abccccccccccccccc"
+	actual_string = "abeeertyujdmfv,gb.hljdhgsftwyeu4"
 	actual_file=File.new(actual_string,"w+")
 	File.open(actual_string,"w") do |file|
 		actual_string.each_char {|cstr|file.putc(cstr)  }
