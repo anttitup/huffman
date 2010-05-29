@@ -1,81 +1,71 @@
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
-require 'Main.rb'
 require 'tree.rb'
 class Bit
-	def initialize tree,kirjoita_tahan_tiedostoon
-		@bits=Array.new
+	def initialize(tree)
+		@bitteja=Array.new
 		@tree =tree
 		@puskuri =Array.new
 	end
 	
-	def write_bit(file,byte)
-		if @bits.size<=7
-			@bits.push byte
+	def kirjoita_bitti(tiedosto,tavu)
+		if @bitteja.size<=7
+			@bitteja.push tavu
 		else
-			puts "kirjoittaa nama"
-			puts @bits
-			bit=bin2dec(@bits.to_s)
-			file.putc(bit)
-			@bits.clear
-			@bits.push byte
+			bit=binaarit_integereiksi(@bitteja.to_s)
+			tiedosto.putc(bit)
+			@bitteja.clear
+			@bitteja.push tavu
 		end
 	end
 
-	def read_bits(lue_tasta_tiedostosta)
-		bits = dec2bin(lue_tasta_tiedostosta.getc).split(//)
+	def lue_bitteja(lue_tasta_tiedostosta)
+		bits = integerit_binaareiksi(lue_tasta_tiedostosta.getc).split(//)
 		while bits.size<8
 			bits.unshift("0")
 		end
-		puts "lukee nama"
-		puts bits
 		bits
 	end
 
-	def write_char char,file,eof
-		puts "saa nama"
-		puts char
+	def kirjoita_charechter char,tiedosto,eof
 		unless eof
 			bits=char.split(//)
 			until bits.empty?
 				bits=bits
 				bit=bits.shift
-				self.write_bit(file, bit)
+				kirjoita_bitti(tiedosto, bit)
 			end
 		else
 			bits=char.split(//)
 			until bits.empty?||bits.nil?
 				bit=bits.shift
-				self.write_bit(file, bit)
+				kirjoita_bitti(tiedosto, bit)
 			end
-			@bits.push('0') while @bits.size<=7
-			puts "loppu"
-			puts @bits
-			bit=bin2dec(@bits.to_s)
-			file.putc(bit)
+			@bitteja.push('0') while @bitteja.size<=7
+			bit=binaarit_integereiksi(@bitteja.to_s)
+			tiedosto.putc(bit)
 		end
 	end
 
-	def bin2dec(number)
-   ret_dec = 0;
-   number.split(//).each{|digit|
-      ret_dec = (Integer(digit) + ret_dec) * 2;
+	def binaarit_integereiksi(numero)
+   ret_dec = 0
+   numero.split(//).each{|digit|
+      ret_dec = (Integer(digit) + ret_dec) * 2
    }
-   return ret_dec/2;
+   return ret_dec/2
 end
 
-	def dec2bin(number)
-   number = Integer(number);
-   if(number == 0)
-      return 0;
+	def integerit_binaareiksi(numero)
+   numero = Integer(numero);
+   if(numero == 0)
+      return 0
    end
-   ret_bin = "";
- 
-   while(number != 0)
-      ret_bin = String(number % 2) + ret_bin;
-      number = number / 2;
+   ret_bin ="" 
+   while(numero != 0)
+      ret_bin = String(numero % 2) + ret_bin
+      numero = numero / 2
    end
-   return ret_bin;
-end
+   return ret_bin
+	end
 
 end

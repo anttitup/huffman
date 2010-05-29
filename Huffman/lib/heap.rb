@@ -3,79 +3,77 @@
 require 'tree.rb'
 
 class Heap
-	attr_accessor :heap
+	attr_accessor :keko
+
 	def initialize
-    @heap = Array.new
+    @keko = Array.new
 	end
 
-	def push! leaf
-		heap=self.heap
-		if heap.empty?
-			heap.push(leaf)
-		elsif heap.size<3
-			if leaf.freq>self.freq(self.last(heap),heap)
-				heap.push(leaf)
+	def tyonna! lehti
+		if @keko.empty?
+			@keko.push(lehti)
+		elsif @keko.size<2
+			if lehti.freq>freq(viimeinen(@keko),@keko)
+				@keko.push(lehti)
 			else
-				heap.unshift(leaf)
+				@keko.unshift(lehti)
 			end
 		else
-			heap.push(leaf)
-			i = self.last(heap)
-			parent=self.parent(i)
-			while i>0 and leaf.freq<self.freq(parent,heap)
-				self.swap(i,parent,heap)
-				i=self.parent(i)
-				parent=self.parent(i)
+			@keko.push(lehti)
+			i = viimeinen(@keko)
+			parent=isanta(i)
+			while i>0 and lehti.freq<freq(parent,@keko)
+				vaihda(i,parent,@keko)
+				i=isanta(i)
+				parent=isanta(i)
 			end
-			@heap=heap
-			return @heap
 		end
 	end
 
-  def heapify i, heap
-		heap_a=heap
-		left = self.left(i)
-    right = self.right(i)
-		if left<=self.last(heap_a) and self.freq(left,heap_a) < self.freq(i,heap_a)
+  def heapify i
+		return if @keko.nil? or @keko.empty?
+		heap_a=@keko
+		left = vasen(i)
+    right = oikea(i)
+		if left<=viimeinen(heap_a) and freq(left,heap_a) < freq(i,heap_a)
 			smallest = left
     else
 			smallest = i
     end
-		if  right<=self.last(heap_a) and self.freq(right,heap_a) < self.freq(smallest,heap_a)
+		if  right<=viimeinen(heap_a) and freq(right,heap_a) < freq(smallest,heap_a)
 			smallest = right
 		end
 		unless smallest==i
-			self.swap(i,smallest,heap_a)
-			self.heapify(smallest,heap_a)
+			self.vaihda(i,smallest,heap_a)
+			self.heapify(smallest)
     end
-		heap_a
+		@keko=heap_a
   end
 
-	def swap swap_this, swap_in_this,heap
-	  help = heap[swap_this]
-    heap[swap_this]=heap[swap_in_this]
-    heap[swap_in_this]=help
-		heap
+	def vaihda vaihda_tama, tahan,keko
+	  help = keko[vaihda_tama]
+    keko[vaihda_tama]=keko[tahan]
+    keko[tahan]=help
+		keko
 	end
 
-  def pop #fi
-
-		if @heap.nil?||@heap.size==0
+  def pop #niin hyvä etten viitsi suomentaa
+		if @keko.nil?||@keko.size==0
 			return nil
-		elsif @heap.size<3
-			min=@heap.first
-			@heap.delete_at(0)
+		elsif @keko.size<3
+			min=@keko.first
+			@keko.delete_at(0)
 			return min
 		else
-			min = @heap.first
-			self.swap(0,self.last(@heap),@heap)
-			@heap.delete_at(self.last(@heap))
-			@heap=self.heapify(0,@heap)	unless @heap.size<=1
+			min = @keko.first
+			self.vaihda(0,self.viimeinen(@keko),@keko)
+			@keko.delete_at(self.viimeinen(@keko))
+			@keko=self.heapify(0)	unless @keko.size<=1
 		return min
 		end
   end
   
-  def parent i
+  def isanta i
 		if i<=2
 			return 0
 		else
@@ -83,33 +81,33 @@ class Heap
 		end
   end
   
-  def left i
+  def vasen i
 			2*i+1
   end
 
-  def right i
+  def oikea i
 		2*i+2
   end
 
-  def last heap
-    unless heap.size==0
-			return heap.size-1
+  def viimeinen keko
+    unless keko.size==0
+			return keko.size-1
 		else
 			return 0
 		end
   end
 
-	def freq(i,heap)
-		if i<heap.length
-			freq=heap.fetch(i)
+	def freq(index,keko)
+		if index<keko.length
+			freq=keko.fetch(index)
 			return freq.freq
 		else
-				raise "error!"
+				raise "vaara indeksi!"
 		end
 	end
 
-	def size
-		@heap.size
+	def koko
+		@keko.size
 	end
 
 end

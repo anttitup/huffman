@@ -13,24 +13,24 @@ describe "new tree"  do
 		@right = Tree::Node.new(@child)
   end
 
-	it "all should extist" do
+	it "mikään ei saisi olla nil" do
 		@tree.should_not be_nil
 		@left.should_not be_nil
 		@child.should_not be_nil
 		@right.should_not be_nil
 	end
 
-	it "you can minus two trees" do
+	it "miinustamisen pitäisi toimia järkevästi" do
 			test=@left.minus(@child)
 			test.should==(@a_freg-@b_freg)
 	end
 
-	it "Leaf should return char" do
+	it "lehden pitäisi pystyä palauttamaan charecht" do
 		@left.charechter.should== @a
 		@child.charechter.should== @b
 	end
 
-	it "Leaf should return frequensy" do
+	it "Lehden pitäisi pystyä palauttamaan freqvenssi" do
 		@left.freq.should==@a_freg
 		@child.freq.should ==@b_freg
 	end

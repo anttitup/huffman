@@ -15,33 +15,35 @@ class Main
 		@keon_koko
   end
 
+	def avaa_tiedosto tiedoston_nimi
+		File.open(tiedoston_nimi,'r')
+	end
 
-  def lue_tiedosto
-		apu= Array.new(256,0)
-		File.open(@tiedoston_nimi,'r')do|tiedosto|
-			tiedosto.each_byte { |tavu|apu[tavu]+=1 }
-			apu[@eof]+=1 #eof
-			@merkkien_maara=apu
-    end
+  def lue_tiedosto tiedosto_kahva
+		apu=Array.new(256,0)
+		tiedosto_kahva.each_byte{ |tavu|apu[tavu]+=1 }
+		apu[@eof]+=1 #eof
+		@merkkien_maara=apu
+    tiedosto_kahva.close
   end
     
   def tee_puu(merkkien_maara)
 		help=Heap.new
 		merkkien_maara.each_with_index do |merkki,indeksi|
-			help.push!(Tree::Leaf.new(indeksi,merkki)) unless merkki==0
+			help.tyonna!(Tree::Leaf.new(indeksi,merkki)) unless merkki==0
 		end
-		@keon_koko=help.size
+		@keon_koko=help.koko
 		help
   end
     
   def yhdista_puut(keko)
-		if keko.size==1
+		if keko.koko==1
 			return keko.pop
 		else
-			while keko.size > 1
+			while keko.koko > 1
 				a = keko.pop
 				b = keko.pop
-				keko.push! Tree::Node.new(a,b)
+				keko.tyonna! Tree::Node.new(a,b)
 			end
 				return keko.pop
 			end
@@ -51,13 +53,13 @@ class Main
 			if puu.is_a? Tree::Leaf
 				taulu[puu.charechter] =prefix
 			else
-				tee_koodit puu.get_left, prefix + "0", taulu
-				tee_koodit puu.get_right, prefix + "1", taulu
+				tee_koodit puu.vasen, prefix + "0", taulu
+				tee_koodit puu.oikea, prefix + "1", taulu
 			end
 			taulu
 		end
 
-		def write_encoding  taulu,tree
+		def kirjoita_enkoodaus  taulu,tree
 			enkoodatun_tiedoston_nimi=@tiedoston_nimi+".encd"
 			encoded_file=File.new(enkoodatun_tiedoston_nimi, "w+")
 			File.open(enkoodatun_tiedoston_nimi,"w")do|kirjoitettava_tiedosto|
@@ -65,13 +67,13 @@ class Main
 				kirjoitettava_tiedosto.puts @keon_koko
 				self.merkkien_taajuus(kirjoitettava_tiedosto,self.merkkien_maara)
 				File.open(@tiedoston_nimi,"r")  do |luettava_tiedsto|
-					bitti=Bit.new(tree,luettava_tiedsto)
+					bitti=Bit.new(tree)
 					until luettava_tiedsto.eof?
 						byte=luettava_tiedsto.getc
 						char=taulu[byte]
-						bitti.write_char(char, kirjoitettava_tiedosto,false)
+						bitti.kirjoita_charechter(char, kirjoitettava_tiedosto,false)
 					end
-						bitti.write_char(taulu[@eof],kirjoitettava_tiedosto,true)
+						bitti.kirjoita_charechter(taulu[@eof],kirjoitettava_tiedosto,true)
 				end
 			end
 			enkoodatun_tiedoston_nimi
@@ -113,23 +115,21 @@ class Main
 	end
 
 	def kirjoita_dekoodattu_tiedosto kirjoita_tahan_tiedostoon,kirjoita_tasta_tiedostosta,puu
-		bit=Bit.new(puu,kirjoita_tasta_tiedostosta)
+		bit=Bit.new(puu)
 			bits=[]
 			$puu = puu
 			until kirjoita_tasta_tiedostosta.eof? and bits.empty?
 				node=puu
 				until node.instance_of?(Tree::Leaf)
-					bits=bit.read_bits(kirjoita_tasta_tiedostosta) if bits.empty?
+					bits=bit.lue_bitteja(kirjoita_tasta_tiedostosta) if bits.empty?
 					bitti=bits.shift
 					if bitti=='0'
-						node=node.get_left
+						node=node.vasen
 					elsif bitti == '1'
-						node=node.get_right
+						node=node.oikea
 					end
-					puts node
 				end
 				if !(node.charechter==@eof)
-					puts node.charechter
 					kirjoita_tahan_tiedostoon.putc(node.charechter)
 				else
 					return
@@ -137,17 +137,27 @@ class Main
 			end
 	end
 end
-def test_script
-	actual_string = "abeeertyujdmfv,gb.hljdhgsftwyeu4"
-	actual_file=File.new(actual_string,"w+")
-	File.open(actual_string,"w") do |file|
-		actual_string.each_char {|cstr|file.putc(cstr)  }
+
+	tiedosto = ARGV[0]
+	argumentit = ARGV[1]
+
+if File.exist?(tiedosto)
+		m=Main.new(tiedosto)
+	if argumentit == "enkoodaa"
+		m.lue_tiedosto(m.avaa_tiedosto(m.tiedoston_nimi))
+		keko=m.tee_puu(m.merkkien_maara)
+		puu = m.yhdista_puut(keko)
+		koodit=m.tee_koodit(puu,"",Array.new(m.keon_koko))
+		m.kirjoita_enkoodaus(koodit,puu)
+	elsif argumentit == "dekoodaa"
+		if tiedosto.end_with?("encd")
+		  m.pura_puu(tiedosto)
+		else
+			puts "kannattaako tätä tiedostoa nyt ihan varmana purkaa? "
+		end
+	else
+		puts "väärä argumentti"
 	end
-	$m=Main.new(actual_string)
-	$m.lue_tiedosto
-	heap=$m.tee_puu($m.merkkien_maara)
-	$a=$m.yhdista_puut(heap)
-	$u=$m.tee_koodit($a, "", Array.new($m.keko.size))
-	s=$m.write_encoding($u,$a)
-	t=$m.pura_puu(s)
+else
+	puts "tiedostoa ei löydy"
 end

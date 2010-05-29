@@ -13,62 +13,40 @@ module Tree
       def minus(tree)
 				@freq -tree.freq
       end
-
-			def walk_tree(number)
-				if self.is_a? Tree::Leaf
-					yield node
-				elsif number==0
-					return self.get_left
-				else
-					return self.get_right
-				end
-			end
 		end
+
     class Node < Tree
-      attr_accessor :left,:right
+      attr_accessor :vasen,:oikea
+
 			def initialize *args
         case args.size
 				when 0
-					@left=nil
-					@right=nil
+					@vasen=nil
+					@oikea=nil
 					super(0)
 				when 1
-						@left=args[0]
-						@right=nil
-						super(@left.freq)
+						@vasen=args[0]
+						@oikea=nil
+						super(@vasen.freq)
 				when 2
-						@left = args[0]
-						@right = args[1]
-						super(@left.freq+@right.freq)
+						@vasen = args[0]
+						@oikea = args[1]
+						super(@vasen.freq+@oikea.freq)
 					else
 						raise "wrong intializing"
 				end
+			end
 
-				def left left
-					@left=left
-				end
-
-				def right right
-					@right=@right
-				end
-
-				def get_left
-					@left
-				end
-
-				def get_right
-					@right
-				end
-      end
-
-    end
+		end
 
     class Leaf < Tree
       attr_accessor :charechter,:freq
-      def initialize char_val,freq
+
+			def initialize char_val,freq
         @charechter = char_val
         super freq
       end
+
     end
     
 end
